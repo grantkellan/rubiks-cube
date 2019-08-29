@@ -1,14 +1,47 @@
 
 
 
+This is a flat depiction of my Rubik's model. 
+It's made up of 6 2D arrays for each side.
+Each one is indexed the same way as the labeled one.
+
                 _______________
                 |____|____|____|
-                |____|____|____|
-________________|____|____|____|_________________________________
+                |____|__T_|____|
+________________|____|____|____|________________________________
 |__00|__01|__02||____|____|____||____|____|____||____|____|____|
-|__10|__11|__12||____|____|____||____|____|____||____|____|____|
+|__10|_L11|__12||____|__F_|____||____|__R_|____||____|_Ba_|____|
 |__20|__21|__22||____|____|____||____|____|____||____|____|____|
                 |____|____|____|
-                |____|____|____|
+                |____|_Bo_|____|
                 |____|____|____|
 
+
+
+This is a visualization of the rows and indeces to help understand my function names.
+calling rotateXRight(0) should essentially rotate the top layer counter clockwise.
+calling rotateYUp(0) should rotate the right layer clockwise.
+calling rotateZUp(0) should rotate the front layer counter clockwise.
+
+            /\
+          /    \
+        /        \
+      /            \
+    /                \
+  /                    \
+/                     /  \
+\           T       /    /|              
+| \               /    /  |               
+|   \           /    /    |                 
+| \   \       /  Y0/      |                   
+|   \   \   /    /        |                     
+|     \ X0\    /          |                       
+|       \   \/   |    R   |                         
+|     F    \ |   |        |    
+\            |   |        /      
+  \          |Z0 |      /          
+    \        |   |    /              
+      \      |   |  /
+        \    |   |/   
+          \  |  /        
+            \|/            
