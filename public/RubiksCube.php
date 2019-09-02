@@ -1,15 +1,15 @@
 <?php
 class RubiksCube {
-    $RED_NUM = 1;
-    $ORANGE_NUM = 2;
-    $BLUE_NUM = 3;
-    $GREEN_NUM = 4;
-    $YELLOW_NUM = 5;
-    $WHITE_NUM = 6;
+    private $RED_NUM = 1;
+    private $ORANGE_NUM = 2;
+    private $BLUE_NUM = 3;
+    private $GREEN_NUM = 4;
+    private $YELLOW_NUM = 5;
+    private $WHITE_NUM = 6;
 
-    $AXIS_X = 1;
-    $AXIS_Y = 2;
-    $AXIS_Z = 3;
+    private $AXIS_X = 1;
+    private $AXIS_Y = 2;
+    private $AXIS_Z = 3;
 
     public function __construct($cubeSize=3, $scrambled = true) {
         $this->cubeSize = max(2, $cubeSize);
@@ -20,6 +20,10 @@ class RubiksCube {
         $this->rightSide = $this->constructSide($this->GREEN_NUM);
         $this->topSide = $this->constructSide($this->YELLOW_NUM);
         $this->bottomSide = $this->constructSide($this->WHITE_NUM);
+
+        if ($scrambled) {
+            $this->scramble();
+        }
     }
 
     /**
@@ -218,7 +222,7 @@ class RubiksCube {
         $tempRow = $this->frontSide[$index];
         $this->frontSide[$index] = $this->rightSide[$index];
         $this->rightSide[$index] = $this->backSide[$index];
-        $this->backSide[$index] = $this->leftSIde[$index];
+        $this->backSide[$index] = $this->leftSide[$index];
         $this->leftSide[$index] = $tempRow;
 
         if ($index == 0) {
@@ -234,13 +238,13 @@ class RubiksCube {
      * and ($this->cubeSize - 1) is the left layer
      */
     public function rotateYUp($index) {
-        $cs = $this->cubeSize
+        $cs = $this->cubeSize;
 
         for ($i = 0; $i < $this->cubeSize; $i++) {
             $tempNum = $this->frontSide[$i][$cs - $index - 1];
             $this->frontSide[$i][$cs - $index - 1] = $this->bottomSide[$i][$cs - $index - 1];
             $this->bottomSide[$i][$cs - $index - 1] = $this->backSide[$cs - $i - 1][$index];
-            $this->backSide[$cs - $i - 1][$index]; = $this->topSide[$i][$cs - $index - 1];
+            $this->backSide[$cs - $i - 1][$index] = $this->topSide[$i][$cs - $index - 1];
             $this->topSide[$i][$cs - $index - 1] = $tempNum;
         }
 
@@ -257,7 +261,7 @@ class RubiksCube {
      * and ($this->cubeSize - 1) is the left layer
      */
     public function rotateYDown($index) {
-        $cs = $this->cubeSize
+        $cs = $this->cubeSize;
 
         for ($i = 0; $i < $this->cubeSize; $i++) {
             $tempNum = $this->frontSide[$i][$cs - $index - 1];
@@ -280,7 +284,7 @@ class RubiksCube {
      * and ($this->cubeSize - 1) is the back layer
      */
     public function rotateZUp($index) {
-        $cs = $this->cubeSize
+        $cs = $this->cubeSize;
 
         for ($i = 0; $i < $this->cubeSize; $i++) {
             $tempNum = $this->rightSide[$i][$index];
@@ -303,14 +307,14 @@ class RubiksCube {
      * and ($this->cubeSize - 1) is the back layer
      */
     public function rotateZDown($index) {
-        $cs = $this->cubeSize
+        $cs = $this->cubeSize;
 
         for ($i = 0; $i < $this->cubeSize; $i++) {
             $tempNum = $this->rightSide[$i][$index];
             $this->rightSide[$i][$index] = $this->topSide[$cs - $index - 1][$i];
             $this->topSide[$cs - $index - 1][$i] = $this->leftSide[$i][$cs - $index - 1];
             $this->leftSide[$i][$cs - $index - 1] = $this->bottomSide[$index][$cs - $i - 1];
-            $this->bottomSide[$index][$cs - $i - 1] = $tempNum
+            $this->bottomSide[$index][$cs - $i - 1] = $tempNum;
         }
 
         if ($index == 0) {
@@ -321,7 +325,7 @@ class RubiksCube {
     }
 
     /**
-     * This is a generic move function that lets you rotate any layer
+     * This is a generic move function that lets you rotate any layer any direction
      * @param int $index The index of the layer you want to rotate where 0 is the front layer
      * and ($this->cubeSize - 1) is the back layer
      */
@@ -356,8 +360,11 @@ class RubiksCube {
         }
     }
 
+    /**
+     * This function scrambles the cube
+     */
     public function scramble() {
-        $numMoves = rand(100, 200);
+        $numMoves = rand(300, 400);
 
         for ($i = 0; $i < $numMoves; $i++) {
             $numRotate = rand(1,3);
@@ -368,17 +375,175 @@ class RubiksCube {
         }
     }
 
-    public function printCube() {
-        $printLayer0 = "             _____________"
-        $printLayer1 = "             |___|___|___|"
-        $printLayer2 = "             |___|___|___|"
-        $printLayer3 = "_____________|___|___|___|__________________________"
-        $printLayer4 = "|___|___|___||___|___|___||___|___|___||___|___|___|"
-        $printLayer5 = "|___|___|___||___|___|___||___|___|___||___|___|___|"
-        $printLayer6 = "|___|___|___||___|___|___||___|___|___||___|___|___|"
-        $printLayer7 = "             |___|___|___|"
-        $printLayer8 = "             |___|___|___|"
-        $printLayer9 = "             |___|___|___|"
+    /**
+     * Returns a 2d "unwrapped" ASCII drawing of the cube
+     */
+    public function toString() {
+        /* Here's an example of a 3Sized cube without any colors
+        $stringLayerA = "             _____________"
+        $stringLayerB = "             |___|___|___|"
+        $stringLayerB = "             |___|_T_|___|"
+        $stringLayerC = "_____________|___|___|___|__________________________"
+        $stringLayerD = "|___|___|___||___|___|___||___|___|___||___|___|___|"
+        $stringLayerD = "|___|_L_|___||___|_F_|___||___|_R_|___||___|_Ba|___|"
+        $stringLayerD = "|___|___|___||___|___|___||___|___|___||___|___|___|"
+        $stringLayerB = "             |___|___|___|"
+        $stringLayerB = "             |___|_Bo|___|"
+        $stringLayerB = "             |___|___|___|"
+        */
+        $cs = $this->cubeSize;
+        $finalString = "";
+
+        $stringLayerA = "";
+        $stringLayerA = str_pad($stringLayerA, 4 * $cs + 1);
+        $stringLayerA = str_pad($stringLayerA, (4 * $cs + 1) * 2, "_");
+
+        $stringLayerB = "";
+        $stringLayerB = str_pad($stringLayerB, 4 * $cs + 1);
+        $stringLayerB = str_pad($stringLayerB, (4 * $cs + 1) * 2, "|___");
+
+        $stringLayerC = "";
+        $stringLayerC = str_pad($stringLayerC, 4 * $cs + 1, "_");
+        $stringLayerC = str_pad($stringLayerC, (4 * $cs + 1) * 2, "|___");
+        $stringLayerC = str_pad($stringLayerC, (4 * $cs + 1) * 4, "_");
+
+        $stringLayerD = "";
+        $stringLayerD = str_pad($stringLayerD, (4 * $cs + 1) * 1, "|___");
+        $stringLayerD = str_pad($stringLayerD, (4 * $cs + 1) * 2, "|___");
+        $stringLayerD = str_pad($stringLayerD, (4 * $cs + 1) * 3, "|___");
+        $stringLayerD = str_pad($stringLayerD, (4 * $cs + 1) * 4, "|___");
+
+        // Add top line
+        $finalString .= $stringLayerA . "\n";
+
+        // Print Top Cells
+        for ($row = 0; $row < $cs; $row++) {
+            $newStringLayer = $stringLayerB;
+            if ($row == ($cs - 1)) {
+                $newStringLayer = $stringLayerC;
+            }
+
+            for ($col = 0; $col < $cs; $col++) {
+                $colorNumber = $this->topSide[$row][$col];
+                $colorString = $this->getColorString($colorNumber);
+                $colorChar = $colorString[0];
+
+                $charIndex = (4 * $cs + 1) + $col * 4 + 2;
+
+                $newStringLayer[$charIndex] = $colorChar;
+                
+            }
+            $finalString .= $newStringLayer . "\n";
+        }
+
+        // Print Middle Cells
+        for ($row = 0; $row < $cs; $row++) {
+            $newStringLayer = $stringLayerD;
+
+            for ($col = 0; $col < $cs; $col++) {
+                // Add left side value
+                $colorNumber = $this->leftSide[$row][$col];
+                $colorString = $this->getColorString($colorNumber);
+                $colorChar = $colorString[0];
+
+                $charIndex = $col * 4 + 2;
+
+                $newStringLayer[$charIndex] = $colorChar;
+                
+                // Add front side value
+                $colorNumber = $this->frontSide[$row][$col];
+                $colorString = $this->getColorString($colorNumber);
+                $colorChar = $colorString[0];
+
+                $charIndex = (4 * $cs + 1) + $col * 4 + 2;
+
+                $newStringLayer[$charIndex] = $colorChar;
+                
+                // Add right side value
+                $colorNumber = $this->rightSide[$row][$col];
+                $colorString = $this->getColorString($colorNumber);
+                $colorChar = $colorString[0];
+
+                $charIndex = (4 * $cs + 1) * 2 + $col * 4 + 2;
+
+                $newStringLayer[$charIndex] = $colorChar;
+
+                // Add back side value
+                $colorNumber = $this->backSide[$row][$col];
+                $colorString = $this->getColorString($colorNumber);
+                $colorChar = $colorString[0];
+
+                $charIndex = (4 * $cs + 1) * 3 + $col * 4 + 2;
+
+                $newStringLayer[$charIndex] = $colorChar;
+            }
+            $finalString .= $newStringLayer . "\n";
+        }
+
+
+        // Print Bottom Cells
+        for ($row = 0; $row < $cs; $row++) {
+            $newStringLayer = $stringLayerB;
+
+            for ($col = 0; $col < $cs; $col++) {
+                $colorNumber = $this->bottomSide[$row][$col];
+                $colorString = $this->getColorString($colorNumber);
+                $colorChar = $colorString[0];
+
+                $charIndex = (4 * $cs + 1) + $col * 4 + 2;
+
+                $newStringLayer[$charIndex] = $colorChar;
+                
+            }
+            $finalString .= $newStringLayer . "\n";
+        }
+
+        return $finalString;
+    }
+
+    /**
+     * Returns string representation of Color int Constants
+     * @param int $colorNum The constant number given to the 
+     * color that you want the String for
+     */
+    private function getColorString($colorNumber) {
+        if ($colorNumber == $this->RED_NUM) {
+            return "Red";
+        } else if ($colorNumber == $this->BLUE_NUM) {
+            return "Blue";
+        } else if ($colorNumber == $this->GREEN_NUM) {
+            return "Green";
+        } else if ($colorNumber == $this->ORANGE_NUM) {
+            return "Orange";
+        } else if ($colorNumber == $this->YELLOW_NUM) {
+            return "Yellow";
+        } else if ($colorNumber == $this->WHITE_NUM) {
+            return "White";
+        } 
+    }
+
+    // @TODO: Implement move memory
+    /**
+     * Attempts to solve the cube with $moveLimit number of random moves 
+     * @param int $moveLimit Max number of moves before giving up on the
+     * "algorithm"
+     * @return Strring[] array of moves that will solve the Cube. 
+     */
+    public function solveRandom($moveLimit = 1000) {
+        $numMoves = 0;
+        while (!$this->isSolved() && $numMoves < $moveLimit) {
+            $axis = rand(1,3);
+            $index = rand(0,$this->cubeSize - 1);
+            $numTurns = rand(1,3);
+
+            $this->makeMove($axis, $index, $numTurns);
+            $numMoves++;
+        }
+        if ($this->isSolved()) {
+            echo "Solved in $numMoves moves\n";
+        } else {
+            echo "Not Solved after $numMoves moves\n";
+        }
     }
 }
 ?>
