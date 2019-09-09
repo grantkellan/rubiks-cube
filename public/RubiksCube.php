@@ -11,18 +11,50 @@ class RubiksCube {
     private $AXIS_Y = 2;
     private $AXIS_Z = 3;
 
-    public function __construct($cubeSize=3, $scrambled = true) {
-        $this->cubeSize = max(2, $cubeSize);
+    public function __construct($options) {
+        echo "memory used      : " . memory_get_usage(false) . "\n";
+        echo "memory allocated : " . memory_get_usage(false) . "\n";
+        $options = (Object) $options;
 
-        $this->frontSide = $this->constructSide($this->RED_NUM);
-        $this->backSide = $this->constructSide($this->ORANGE_NUM);
-        $this->leftSide = $this->constructSide($this->BLUE_NUM);
-        $this->rightSide = $this->constructSide($this->GREEN_NUM);
-        $this->topSide = $this->constructSide($this->YELLOW_NUM);
-        $this->bottomSide = $this->constructSide($this->WHITE_NUM);
+        $loadedCube = false;
+        if (isset($options->frontSide) && is_array($options->frontSide)) {
+            $this->cubeSize = count($options->frontSide);
 
-        if ($scrambled) {
-            $this->scramble();
+            $this->frontSide = $options->frontSide;
+            $this->backSide = $options->backSide;
+            $this->leftSide = $options->leftSide;
+            $this->rightSide = $options->rightSide;
+            $this->topSide = $options->topSide;
+            $this->bottomSide = $options->bottomSide;
+
+            $loadedCube = $this->isValidCube();
+            echo "WE LOADED" . $this->cubeSize;
+        }
+
+        if (!$loadedCube) {
+            echo "WE RELOADING";
+            $cubeSize = 3;
+            if (isset($options->cubeSize)) {
+                $cubeSize = $options->cubeSize;
+            }
+
+            $scrambled = false;
+            if (isset($options->scrambled)) {
+                $scrambled = $options->scrambled;
+            }
+
+            $this->cubeSize = max(2, $cubeSize);
+
+            $this->frontSide = $this->constructSide($this->RED_NUM);
+            $this->backSide = $this->constructSide($this->ORANGE_NUM);
+            $this->leftSide = $this->constructSide($this->BLUE_NUM);
+            $this->rightSide = $this->constructSide($this->GREEN_NUM);
+            $this->topSide = $this->constructSide($this->YELLOW_NUM);
+            $this->bottomSide = $this->constructSide($this->WHITE_NUM);
+
+            if ($scrambled) {
+                $this->scramble();
+            }
         }
     }
 
@@ -33,6 +65,33 @@ class RubiksCube {
     private function constructSide($colorNumber=1) {
         $row = array_fill(0, $this->cubeSize, $colorNumber);
         return array_fill(0, $this->cubeSize, $row);
+    }
+
+    private function isValidCube() {
+        $isValid = true;
+
+        $isValid = $isValid && $this->isValidSide($this->frontSide);
+        $isValid = $isValid && $this->isValidSide($this->backSide);
+        $isValid = $isValid && $this->isValidSide($this->leftSide);
+        $isValid = $isValid && $this->isValidSide($this->rightSide);
+        $isValid = $isValid && $this->isValidSide($this->topSide);
+        $isValid = $isValid && $this->isValidSide($this->bottomSide);
+
+        return $isValid;
+    }
+
+    private function isValidSide($side) {
+        $cs = $this->cubeSize;
+        if (!is_array($side) || count($side) !== $cs) {
+            return false;
+        }
+        for ($i = 0; $i < count($side); $i++) {
+            $layer = $side[$i];
+            if (!is_array($layer) || count($layer) !== $cs) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -527,7 +586,7 @@ class RubiksCube {
      * Attempts to solve the cube with $moveLimit number of random moves 
      * @param int $moveLimit Max number of moves before giving up on the
      * "algorithm"
-     * @return Strring[] array of moves that will solve the Cube. 
+     * @return String[] array of moves that will solve the Cube. 
      */
     public function solveRandom($moveLimit = 1000) {
         $numMoves = 0;
@@ -544,6 +603,65 @@ class RubiksCube {
         } else {
             echo "Not Solved after $numMoves moves\n";
         }
+    }
+
+    /**
+     * Attempts to solve the cube using a Depth First Search.
+     * The algorithm will search as deep as $depthLimit
+     * @param int $depthLimit Max depth for the algorithm to search
+     * @return String[] array of moves that will solve the Cube. 
+     */
+    public function solveDFS($depthLimit = 20, $leaveCubeSolved = true) {
+        $moveArr = [];
+
+        if ($this->solveDFSRecursive($depthLimit, $moveArr, $leaveCubeSolved)) {
+            foreach($moveArr as $index->$move) {
+                $axis = $move[0];
+                $layer = $move[1];
+                $numTurns = $move[2];
+
+                echo "Turn the $layer layer on the $axis axis $numTurns number of turns\n";
+                return $moveArr;
+            }
+        } else {
+            echo "No solutions found";
+            return [];
+        }
+    }
+
+    private function solveDFSRecursive($depthLimit, &$moveArr, $leaveCubeSolved) {
+        if ($this->isSolved()) {
+            if (!$leaveCubeSolved) {
+                for ($i = count($moveArr) - 1; $i >= 0; $i--) {
+                    $move = $moveArr[$i];
+                    $axis = $move[0];
+                    $layer = $move[1];
+                    $numTurns = 4 - $move[2];
+                    $this-makeMove($axis, $layer, $numTurns);
+                }
+            }
+            return true;
+        }
+
+        if (count($moveArr) > $depthLimit) {
+            return false;
+        }
+
+        for ($numTurns = 1; $numTurns <= 3; $numTurns++) {
+            $undoNumTurns = 4 - $numTurns;
+            for ($layer = 0; $layer < $this->cubeSize; $layer++) {
+                for ($axis = 1; $axis <= 3; $axis++) {
+                    array_push($moveArr, [$axis, $layer, $numTurns]);
+                    $this->makeMove($axis, $layer, $numTurns);
+                    if ($this->solveDFSRecursive($depthLimit, $moveArr, $leaveCubeSolved)) {
+                        return true;
+                    }
+                    array_pop($moveArr);
+                    $this->makeMove($axis, $layer, $undoNumTurns);
+                }
+            }
+        }
+        return false;
     }
 }
 ?>
