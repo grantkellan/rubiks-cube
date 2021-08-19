@@ -1,4 +1,6 @@
 import java.util.Arrays;
+import java.util.Random;
+import java.util.Stack;
 
 public class RubiksCube {
     private int NUM_RED = 0;
@@ -12,9 +14,12 @@ public class RubiksCube {
 
     public int AXIS_X = 0;
     public int AXIS_Y = 1;
-    public int AXIS_Z = 2;
+    public int AXIS_Z = 1;
 
     private int NUM_SIDES = 6;
+
+    private int SCRAMBLE_RAND_MIN = 100;
+    private int SCRAMBLE_RAND_MAX = 300;
     private int cubeSize;
 
 
@@ -144,14 +149,53 @@ public class RubiksCube {
         return true;
     }
 
+    /**
+     * Returns whether or not the Rubik's Cube is in a finished state.
+     */
+    public boolean isSolved() {
+        boolean isSolved = this.sideIsSolved(this.frontSideArr);
+        isSolved = isSolved && this.sideIsSolved(this.backSideArr);
+        isSolved = isSolved && this.sideIsSolved(this.leftSideArr);
+        isSolved = isSolved && this.sideIsSolved(this.rightSideArr);
+        isSolved = isSolved && this.sideIsSolved(this.topSideArr);
+        isSolved = isSolved && this.sideIsSolved(this.bottomSideArr);
+
+        return isSolved;
+    }
+
+    /**
+     * Returns whether or not a side is all the same color.
+     */
+    private boolean sideIsSolved(int[][] side) {
+        int colorNumber = side[0][0];
+        for (int row = 0; row < this.cubeSize; row++) {
+            for (int col = 0; col < this.cubeSize; col++) {
+                
+                int currColorNumber = side[row][col];
+                if (currColorNumber != colorNumber) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     public void scramble() {
-        //int numMoves = rand() % 100 + 300;
+        Random rn = new Random();
+        int range = this.SCRAMBLE_RAND_MAX - this.SCRAMBLE_RAND_MIN + 1;
+        int numMoves = rn.nextInt(range) + this.SCRAMBLE_RAND_MIN;
 //
-        //for (int i = 0; i < numMoves; i++) {
-        //    int axis = rand() % 3;
-        //    int numRotate = rand() % 3;
-        //    int layerIndex = rand() % this.cubeSize;
-        //}
+        for (int i = 0; i < numMoves; i++) {
+            int axis = rn.nextInt(3);
+            int layerIndex = rn.nextInt(this.cubeSize);
+            int numRotate = rn.nextInt(3) + 1;
+
+            //axis = 0;
+            //layerIndex = 0;
+            //numRotate = 3;
+
+            this.makeMove(axis, layerIndex, numRotate);
+        }
     }
 
     public String toString() {
@@ -177,14 +221,14 @@ public class RubiksCube {
         for (int row = 0; row < cs - 1; row++) {
             returnString += "\n" + this.stringRepeat(" ", repeatLength);
             for (int col = 0; col < cs; col++) {
-                returnString += "|_" + side[row][col] + "_";
+                returnString += "|_" + this.getColorChar(side[row][col]) + "_";
             }
             returnString += "|";
 
         }
         returnString += "\n" + this.stringRepeat("_", repeatLength);
         for (int col = 0; col < cs; col++) {
-            returnString += "|_" + side[cs - 1][col] + "_";
+            returnString += "|_" + this.getColorChar(side[cs - 1][col]) + "_";
         }
         returnString += "|";
         returnString += this.stringRepeat("_", repeatLength * 2);
@@ -203,16 +247,16 @@ public class RubiksCube {
         for (int row = 0; row < cs; row++) {
             returnString += "\n";
             for (int col = 0; col < cs; col++) {
-                returnString += "|_" + leftSide[row][col] + "_";
+                returnString += "|_" + this.getColorChar(leftSide[row][col]) + "_";
             }
             for (int col = 0; col < cs; col++) {
-                returnString += "|_" + frontSide[row][col] + "_";
+                returnString += "|_" + this.getColorChar(frontSide[row][col]) + "_";
             }
             for (int col = 0; col < cs; col++) {
-                returnString += "|_" + rightSide[row][col] + "_";
+                returnString += "|_" + this.getColorChar(rightSide[row][col]) + "_";
             }
             for (int col = 0; col < cs; col++) {
-                returnString += "|_" + backSide[row][col] + "_";
+                returnString += "|_" + this.getColorChar(backSide[row][col]) + "_";
             }
             returnString += "|";
 
@@ -230,7 +274,7 @@ public class RubiksCube {
         for (int row = 0; row < cs; row++) {
             returnString += "\n" + this.stringRepeat(" ", repeatLength);
             for (int col = 0; col < cs; col++) {
-                returnString += "|_" + side[row][col] + "_";
+                returnString += "|_" + this.getColorChar(side[row][col]) + "_";
             }
             returnString += "|";
 
@@ -377,17 +421,17 @@ public class RubiksCube {
         int cs = this.cubeSize;
 
         for (int i = 0; i < cs; i++) {
-            int tempNum = this.frontSideArr[i][cs - layerIndex - 1];
-            this.frontSideArr[i][cs - layerIndex - 1] = this.bottomSideArr[i][cs - layerIndex - 1];
-            this.bottomSideArr[i][cs - layerIndex - 1] = this.backSideArr[cs - i - 1][layerIndex];
-            this.backSideArr[cs - i - 1][layerIndex] = this.topSideArr[i][cs - layerIndex - 1];
-            this.topSideArr[i][cs - layerIndex - 1] = tempNum;
+            int tempNum = this.frontSideArr[i][layerIndex];
+            this.frontSideArr[i][layerIndex] = this.bottomSideArr[i][layerIndex];
+            this.bottomSideArr[i][layerIndex] = this.backSideArr[cs - i - 1][cs - layerIndex - 1];
+            this.backSideArr[cs - i - 1][cs - layerIndex - 1] = this.topSideArr[i][layerIndex];
+            this.topSideArr[i][layerIndex] = tempNum;
         }
 
         if (layerIndex == 0) {
-            this.rightSideArr = this.rotateArrayClockwise(this.rightSideArr);
-        } else if (layerIndex == this.cubeSize - 1) {
             this.leftSideArr = this.rotateArrayCounterClockwise(this.leftSideArr);
+        } else if (layerIndex == this.cubeSize - 1) {
+            this.rightSideArr = this.rotateArrayClockwise(this.rightSideArr);
         }
     }
 
@@ -400,17 +444,17 @@ public class RubiksCube {
         int cs = this.cubeSize;
 
         for (int i = 0; i < cs; i++) {
-            int tempNum = this.frontSideArr[i][cs - layerIndex - 1];
-            this.frontSideArr[i][cs - layerIndex - 1] = this.topSideArr[i][cs - layerIndex - 1];
-            this.topSideArr[i][cs - layerIndex - 1] = this.backSideArr[cs - i - 1][layerIndex];
-            this.backSideArr[cs - i - 1][layerIndex] = this.bottomSideArr[i][cs - layerIndex - 1];
-            this.bottomSideArr[i][cs - layerIndex - 1] = tempNum;
+            int tempNum = this.frontSideArr[i][layerIndex];
+            this.frontSideArr[i][layerIndex] = this.topSideArr[i][layerIndex];
+            this.topSideArr[i][layerIndex] = this.backSideArr[cs - i - 1][cs - layerIndex - 1];
+            this.backSideArr[cs - i - 1][cs - layerIndex - 1] = this.bottomSideArr[i][layerIndex];
+            this.bottomSideArr[i][layerIndex] = tempNum;
         }
 
         if (layerIndex == 0) {
-            this.rightSideArr = this.rotateArrayCounterClockwise(this.rightSideArr);
-        } else if (layerIndex == cs - 1) {
             this.leftSideArr = this.rotateArrayClockwise(this.leftSideArr);
+        } else if (layerIndex == cs - 1) {
+            this.rightSideArr = this.rotateArrayCounterClockwise(this.rightSideArr);
         }
     }
 
@@ -459,7 +503,165 @@ public class RubiksCube {
             this.backSideArr = this.rotateArrayCounterClockwise(this.backSideArr);
         }
     }
+/**End Movement Methods */
+/********************************************************************* */
 
+/**
+ * Returns string representation of Color int Constants
+ * @param int colorNum The constant number given to the 
+ * color that you want the String for
+ */
+private String getColorString(int colorNumber) {
+    if (colorNumber == this.NUM_RED) {
+        return "Red";
+    } else if (colorNumber == this.NUM_BLUE) {
+        return "Blue";
+    } else if (colorNumber == this.NUM_GREEN) {
+        return "Green";
+    } else if (colorNumber == this.NUM_ORANGE) {
+        return "Orange";
+    } else if (colorNumber == this.NUM_YELLOW) {
+        return "Yellow";
+    } else { // if (colorNumber == this.NUM_WHITE) {
+        return "White";
+    }
+}
+
+/**
+ * Returns char representation of Color int Constants
+ * @param int colorNum The constant number given to the 
+ * color that you want the char for
+ */
+private char getColorChar(int colorNumber) {
+    if (colorNumber == this.NUM_RED) {
+        return 'R';
+    } else if (colorNumber == this.NUM_BLUE) {
+        return 'B';
+    } else if (colorNumber == this.NUM_GREEN) {
+        return 'G';
+    } else if (colorNumber == this.NUM_ORANGE) {
+        return 'O';
+    } else if (colorNumber == this.NUM_YELLOW) {
+        return 'Y';
+    } else { // if (colorNumber == this.NUM_WHITE) {
+        return 'W';
+    } 
+}
+
+// @TODO: Implement move memory
+/**
+ * Attempts to solve the cube with moveLimit number of random moves 
+ * @param int moveLimit Max number of moves before giving up on the
+ * "algorithm"
+ * @return String[] array of moves that will solve the Cube. 
+ */
+public void solveRandom(int moveLimit) {
+    int numMoves = 0;
+    Random rn = new Random();
+    while (!this.isSolved() && numMoves < moveLimit) {
+        int axis = rn.nextInt(3);
+        int index = rn.nextInt(this.cubeSize);
+        int numTurns = rn.nextInt(3) + 1;
+
+        this.makeMove(axis, index, numTurns);
+        numMoves++;
+    }
+    if (this.isSolved()) {
+        System.out.println("Solved in " + numMoves + " moves");
+    } else {
+        System.out.println("Not Solved after " + numMoves + " moves");
+    }
+}
+
+/**
+ * Attempts to solve the cube using a Depth First Search.
+ * The algorithm will search as deep as depthLimit
+ * @param int depthLimit Max depth for the algorithm to search
+ * @return String[] array of moves that will solve the Cube. 
+ */
+public Stack<int[]> solveDFS(int depthLimit, boolean leaveCubeSolved) {
+    Stack<int[]> moveStack = new Stack<int[]>();
+
+    if (this.solveDFSRecursive(depthLimit, moveStack, -1, -1, leaveCubeSolved)) {
+        Stack<int[]> reverseStack = new Stack<int[]>();
+
+        // print moves
+        while (!moveStack.isEmpty()) {
+            reverseStack.push(moveStack.pop());
+        }
+        while (!reverseStack.isEmpty()) {
+            int[] move = reverseStack.pop();
+            moveStack.push(move);
+
+            int axis = move[0];
+            int layer = move[1];
+            int numTurns = move[2];
+
+            String printString = "turn the layer " + layer;
+            printString += " on the axis " + axis;
+            printString += " " + numTurns + " number of turns.";
+
+            System.out.println(printString);
+        }
+        return moveStack;
+    } else {
+        System.out.println("No solutions found");;
+        return new Stack<int[]>();
+    }
+}
+
+private boolean solveDFSRecursive(int depthLimit, Stack<int[]> moveStack, int lastAxis,
+                                  int lastLayer, boolean leaveCubeSolved) {
+    if (this.isSolved()) {
+        if (!leaveCubeSolved) {
+            Stack<int[]> reverseStack = new Stack<int[]>();
+
+            // undo moves
+            while (!moveStack.isEmpty()) {
+                int[] move = moveStack.pop();
+                reverseStack.push(move);
+                int axis = move[0];
+                int layer = move[1];
+                int numTurns = 4 - move[2];
+                this.makeMove(axis, layer, numTurns);
+            }
+
+            // rebuild the stack
+            while (!reverseStack.isEmpty()) {
+                moveStack.push(reverseStack.pop());
+            }
+        }
+        return true;
+    }
+
+    if (moveStack.size() > depthLimit) {
+        return false;
+    }
+
+    for (int numTurns = 1; numTurns <= 3; numTurns++) {
+        int undoNumTurns = 4 - numTurns;
+        for (int layer = 0; layer < this.cubeSize; layer++) {
+            for (int axis = 0; axis < 3; axis++) {
+                if (axis != lastAxis || layer != lastLayer) {
+                    int[] newMoveArr = new int[3];
+                    newMoveArr[0] = axis;
+                    newMoveArr[1] = layer;
+                    newMoveArr[2] = numTurns;
+
+                    moveStack.push(newMoveArr);
+                    this.makeMove(axis, layer, numTurns);
+                    //System.out.println(this.toString());
+                    if (this.solveDFSRecursive(depthLimit, moveStack, axis, layer, leaveCubeSolved)) {
+                        return true;
+                    }
+                    moveStack.pop();
+                    this.makeMove(axis, layer, undoNumTurns);
+                }
+            }
+        }
+    }
+    return false;
+}
     
     
 }
