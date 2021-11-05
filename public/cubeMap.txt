@@ -1,6 +1,3 @@
-
-
-
 This is a flat depiction of my Rubik's model. 
 It's made up of 6 2D arrays for each side.
 Each one is indexed the same way as the labeled one.
